@@ -1,0 +1,44 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  # Allows to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-tests:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+        include:
+          - os: windows-latest
+            triplet: x64-windows-release
+            build-type: Release
+          - os: ubuntu-latest
+            triplet: x64-linux-release
+            build-type: Release
+          - os: macos-latest
+            triplet: x64-osx
+            build-type: Release
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure CMake
+        run: |
+          cmake -S . -B make -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }}
+      - name: Build
+        working-directory: ./make
+        run: |
+          cmake --build . --config ${{ matrix.build-type }} --parallel $(nproc)
