@@ -81,7 +81,7 @@ public:
 			std::cout << std::endl;
 		}
 	}
-	static void SetFileOutput(std::string newPath)
+	static void EnableFileOutput(std::string newPath)
 	{
 		if(!file.is_open())
 		{
