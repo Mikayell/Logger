@@ -1,7 +1,6 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
-#define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -18,25 +17,21 @@ enum LogLevel
 	FatalLevel
 };
 
-std::vector<const char*> LevelStr{"[Trace]\t", "[Debug]\t", "[Info]\t", "[Warn]\t", "[Erroe]\t", "[Fatal]\t"};
+std::vector<std::string> LevelStr{"[Trace]\t", "[Debug]\t", "[Info]\t", "[Warn]\t", "[Erroe]\t", "[Fatal]\t"};
 
-template<typename ...Args>
-constexpr void print(Args&&... args) noexcept
-{
-   ((std::cout << std::forward<Args>(args) << " "), ...);
-}
 
 class Logger
 {
 	
 public:
+
 	static void SetLevel(LogLevel newLevel)
 	{
 		level = newLevel;
 	}
 	
 	template <typename... Args>
-	static void Trace(const char* msg, Args... args)
+	static void Trace(std::string msg, Args... args)
 	{
 		log(WarnLevel, LevelStr[0], msg, args...);
 	}
@@ -54,7 +49,7 @@ public:
 	}
 	
 	template <typename... Args>
-	static void Warn(const char* msg, Args... args)
+	static void Warn(std::string msg, Args... args)
 	{
 		log(WarnLevel, LevelStr[3], msg, args...);
 	}
@@ -71,30 +66,32 @@ public:
 		log(WarnLevel, LevelStr[5], msg, args...);
 	}
 	
-	static void SetFileOutput()
+	static void EnableFileOutput()
 	{
-		if(file != 0)
+		if(file)
 		{
-			fclose(file);
+			file.close();
 		}
+		
 		filePath = "log.txt";
-		file = fopen(filePath, "a");
+		file.open(filePath, std::ios::app);
 		if(!file)
 		{
 			perror("Error opening file");
 			std::cout << std::endl;
 		}
 	}
-	static void SetFileOutput(const char* newPath)
+	static void SetFileOutput(std::string newPath)
 	{
-		if(!file)
+		if(!file.is_open())
 		{
-			fclose(file);
+			file.close();
 		}
 
 		filePath = newPath;
-		file = fopen(filePath, "a");
-		if(!file)
+		file.open(filePath, std::ios::app);
+
+		if(!file.is_open())
 		{
 			perror("Error opening file");
 			std::cout << std::endl;
@@ -104,16 +101,32 @@ public:
 
 	static void CloseFile()
 	{
-		fclose(file);
-		file = 0;
+		file.close();
+		
 	}
-
 
 private:
 	static LogLevel level;
+	static std::string filePath;
+	static std::fstream file;
+
+private:
+
 	template<typename... Args>
-	static void log(LogLevel lvl, const char* level_str, const char* msg, Args... args)
-	{static 
+	static constexpr void write(Args&&... args) noexcept
+	{
+		((Logger::file << std::forward<Args>(args) << " "), ...);
+	}
+
+	template<typename... Args>
+	static constexpr void print(Args&&... args) noexcept
+	{
+   		((std::cout << std::forward<Args>(args) << " "), ...);
+	}
+
+	template<typename... Args>
+	static void log(LogLevel lvl, std::string level_str, std::string msg, Args... args)
+	{
 		std::time_t cur_time = std::time(0);
 		std::tm* p = std::localtime(&cur_time);
 		char tbuffer[100];
@@ -121,29 +134,26 @@ private:
 
 		if(level < lvl)
 		{
-			printf("%s\t", tbuffer);
+			std::cout << tbuffer << "\t";
 			std::cout << level_str << "\t";
 			print(msg, args...);
 			std::cout << std::endl;
 		}
 
-		if(file)
+		if(file.is_open())
 		{
-			fprintf(file, "%s\t", tbuffer);
-			fprintf(file, "%s", level_str);
-			fprintf(file, "%s", msg);
-			fprintf(file, "\n");
+			
+			file << tbuffer << "\t";
+			file << level_str;
+			write(msg, args...);
+			file << "\n";
 		}
 	}
-	static const char* filePath;
-	static FILE* file;
 	
-	
-
 };
 
 LogLevel Logger::level = InfoLevel;
-const char* Logger::filePath = 0;
-FILE* Logger::file = 0;
+std::string Logger::filePath;
+std::fstream Logger::file;
 
 #endif
