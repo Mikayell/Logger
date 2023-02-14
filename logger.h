@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <chrono>
 #include <ctime>
 #include <utility>
 
@@ -127,14 +128,13 @@ private:
 	template<typename... Args>
 	static void log(LogLevel lvl, std::string level_str, std::string msg, Args... args)
 	{
-		std::time_t cur_time = std::time(0);
-		std::tm* p = std::localtime(&cur_time);
-		char tbuffer[100];
-		strftime(tbuffer, 100, "%c", p);
 
+		auto time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+		std::string tm = std::string(std::ctime(&time));
+		
 		if(level < lvl)
 		{
-			std::cout << tbuffer << "\t";
+			std::cout << tm.substr(0, tm.length() - 1) << "\t";
 			std::cout << level_str << "\t";
 			print(msg, args...);
 			std::cout << std::endl;
@@ -143,7 +143,7 @@ private:
 		if(file.is_open())
 		{
 			
-			file << tbuffer << "\t";
+			file << tm.substr(0, tm.length() - 1) << "\t";
 			file << level_str;
 			write(msg, args...);
 			file << "\n";
