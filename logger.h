@@ -7,7 +7,7 @@
 #include <chrono>
 #include <ctime>
 #include <utility>
-
+#include <iomanip>
 enum LogLevel
 {
 	TraceLevel,
@@ -129,12 +129,10 @@ private:
 	static void log(LogLevel lvl, std::string level_str, std::string msg, Args... args)
 	{
 
-		auto time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-		std::string tm = std::string(std::ctime(&time));
-		
+		std::time_t const now_c = std::time(0);
 		if(level < lvl)
 		{
-			std::cout << tm.substr(0, tm.length() - 1) << "\t";
+			std::cout << std::put_time(std::localtime(&now_c), "%F %T") << "\t";
 			std::cout << level_str << "\t";
 			print(msg, args...);
 			std::cout << std::endl;
@@ -143,7 +141,7 @@ private:
 		if(file.is_open())
 		{
 			
-			file << tm.substr(0, tm.length() - 1) << "\t";
+			file << std::put_time(std::localtime(&now_c), "%F %T") << "\t";
 			file << level_str;
 			write(msg, args...);
 			file << "\n";
