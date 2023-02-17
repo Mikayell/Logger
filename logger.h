@@ -8,6 +8,43 @@
 #include <ctime>
 #include <utility>
 #include <iomanip>
+
+namespace tmp
+{
+	tm localtime(const std::time_t& time)
+	{
+		std::tm tm_snapshot;
+	#if (defined(WIN32) || defined(_WIN32) || defined(__WIN32__))
+		localtime_s(&tm_snapshot, &time);
+	#else
+		localtime_r(&time, &tm_snapshot);
+	#endif
+		return tm_snapshot;
+	}
+
+	std::string put_time(const std::tm* date_time, const char* c_time_format)
+	{
+	#if (defined(WIN32) || defined(_WIN32) || defined(__WIN32__))
+		std::ostringstream oss;
+		oss << std::put_time(const_cast<std::tm*>(date_time), c_time_format);
+		return oss.str();
+	#else
+		const size_t size = 1024;
+  		char buffer[size];
+  		auto success = std::strftime(buffer, size, c_time_format, date_time);
+		if (0 == success)
+    		return c_time_format; 
+  		return buffer;
+	#endif
+	}
+
+	std::time_t systemtime_now()
+	{
+  		auto system_now = std::chrono::system_clock::now();
+  		return std::chrono::system_clock::to_time_t(system_now);
+	}
+
+}
 enum LogLevel
 {
 	TraceLevel,
@@ -128,11 +165,10 @@ private:
 	template<typename... Args>
 	static void log(LogLevel lvl, std::string level_str, std::string msg, Args... args)
 	{
-
-		std::time_t const now_c = std::time(0);
+		std::tm t = tmp::localtime(tmp::systemtime_now());
 		if(level < lvl)
 		{
-			std::cout << std::put_time(std::localtime(&now_c), "%F %T") << "\t";
+			std::cout << tmp::put_time(&t, "%F %T") << "\t";
 			std::cout << level_str << "\t";
 			print(msg, args...);
 			std::cout << std::endl;
@@ -141,7 +177,7 @@ private:
 		if(file.is_open())
 		{
 			
-			file << std::put_time(std::localtime(&now_c), "%F %T") << "\t";
+			file << tmp::put_time(&t, "%F %T") << "\t";
 			file << level_str;
 			write(msg, args...);
 			file << "\n";
