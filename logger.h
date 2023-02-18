@@ -8,6 +8,7 @@
 #include <ctime>
 #include <utility>
 #include <iomanip>
+#include <mutex>
 
 namespace tmp
 {
@@ -55,7 +56,7 @@ enum LogLevel
 	FatalLevel
 };
 
-std::vector<std::string> LevelStr{"[Trace]\t", "[Debug]\t", "[Info]\t", "[Warn]\t", "[Erroe]\t", "[Fatal]\t"};
+std::vector<std::string> LevelStr{"[Trace]\t", "[Debug]\t", "[Info]\t", "[Warn]\t", "[Error]\t", "[Fatal]\t"};
 
 
 class Logger
@@ -147,7 +148,7 @@ private:
 	static LogLevel level;
 	static std::string filePath;
 	static std::fstream file;
-
+	static std::mutex _mutex;
 private:
 
 	template<typename... Args>
@@ -167,7 +168,8 @@ private:
 	{
 		std::tm t = tmp::localtime(tmp::systemtime_now());
 		if(level <= lvl)
-		{
+		{	
+			std::lock_guard lock(_mutex);
 			std::cout << tmp::put_time(&t, "%F %T") << "\t";
 			std::cout << level_str << "\t";
 			print(msg, args...);
@@ -189,5 +191,6 @@ private:
 LogLevel Logger::level = InfoLevel;
 std::string Logger::filePath;
 std::fstream Logger::file;
+std::mutex Logger::_mutex;
 
 #endif
