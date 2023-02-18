@@ -71,19 +71,19 @@ public:
 	template <typename... Args>
 	static void Trace(std::string msg, Args... args)
 	{
-		log(WarnLevel, LevelStr[0], msg, args...);
+		log(TraceLevel, LevelStr[0], msg, args...);
 	}
 	
 	template <typename... Args>
 	static void Debug(std::string msg, Args... args)
 	{
-		log(WarnLevel, LevelStr[1], msg, args...);
+		log(DebugLevel, LevelStr[1], msg, args...);
 	}
 	
 	template <typename... Args>
 	static void Info(std::string msg, Args... args)
 	{
-		log(WarnLevel, LevelStr[2], msg, args...);
+		log(InfoLevel, LevelStr[2], msg, args...);
 	}
 	
 	template <typename... Args>
@@ -95,13 +95,13 @@ public:
 	template <typename... Args>
 	static void Error(std::string msg, Args... args)
 	{
-		log(WarnLevel, LevelStr[4], msg, args...);
+		log(ErrorLevel, LevelStr[4], msg, args...);
 	}
 	
 	template <typename... Args>
 	static void Fatal(std::string msg, Args... args)
 	{
-		log(WarnLevel, LevelStr[5], msg, args...);
+		log(FatalLevel, LevelStr[5], msg, args...);
 	}
 	
 	static void EnableFileOutput()
@@ -166,7 +166,7 @@ private:
 	static void log(LogLevel lvl, std::string level_str, std::string msg, Args... args)
 	{
 		std::tm t = tmp::localtime(tmp::systemtime_now());
-		if(level < lvl)
+		if(level <= lvl)
 		{
 			std::cout << tmp::put_time(&t, "%F %T") << "\t";
 			std::cout << level_str << "\t";
