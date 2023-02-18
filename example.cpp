@@ -1,4 +1,5 @@
 #include <thread>
+#include <functional>
 #include "logger.h"
 
 void log(int num)
@@ -15,7 +16,7 @@ int main()
 	std::thread threads[10];
 	for(int i = 0; i < 10; ++i)
 	{
-		threads[i] = std::thread(log, i);
+		threads[i] = std::thread(std::ref(log), i);
 	}
 	for(int i = 0; i < 10; ++i)
 	{
