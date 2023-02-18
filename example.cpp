@@ -15,7 +15,7 @@ int main()
 	std::vector<std::thread> threads;
 	for(int i = 0; i < 10; ++i)
 	{
-		threads.push_back(std::thread(log, i));
+		threads.push_back(std::thread([&]() { log(i); }));
 	}
 	for(int i = 0; i < 10; ++i)
 	{
